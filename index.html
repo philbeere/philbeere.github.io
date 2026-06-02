@@ -7,145 +7,98 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         body { font-family: sans-serif; }
-        .fixed-header { position: fixed; top: 0; left: 0; right: 0; z-index: 10; }
-        .fixed-footer { position: fixed; bottom: 0; left: 0; right: 0; z-index: 10; }
-        .content-padding { padding-top: 4rem; padding-bottom: 8rem; }
+        /* Header fest verankert */
+        .fixed-header { position: fixed; top: 0; left: 0; right: 0; z-index: 50; background: white; height: 70px; }
+        /* Padding oben im Hauptteil verhindert Überdeckung */
+        .content-padding { padding-top: 80px; padding-bottom: 250px; }
+        .fixed-footer { position: fixed; bottom: 0; left: 0; right: 0; z-index: 50; background: white; border-top: 1px solid #e5e7eb; padding: 10px; }
     </style>
 </head>
 <body class="bg-gray-50 text-gray-900">
 
-    <!-- Kopfteil -->
-    <header class="fixed-header bg-white shadow-md p-2 flex border-b border-gray-200">
-        <button id="btn-objekt" class="flex-1 py-2 font-bold text-blue-600 border-b-2 border-blue-600">Objekt</button>
-        <button id="btn-finanzierung" class="flex-1 py-2 font-semibold text-gray-500">Finanzierung</button>
+    <header class="fixed-header shadow-md p-2 flex border-b border-gray-200">
+        <button id="btn-objekt" class="flex-1 py-3 font-bold text-blue-600 border-b-2 border-blue-600">Objekt</button>
+        <button id="btn-finanzierung" class="flex-1 py-3 font-semibold text-gray-500">Finanzierung</button>
     </header>
 
-    <!-- Hauptteil -->
-    <main class="content-padding p-4">
-        <div id="view-objekt">
+    <main class="content-padding p-4 space-y-6">
+        <div id="view-objekt" class="space-y-4">
             <div class="grid grid-cols-2 gap-4">
-                <div class="col-span-1">
-                    <label class="block text-sm font-medium mb-1">Objekttyp</label>
-                    <select id="objekttyp" class="w-full p-2 rounded-full border border-gray-300">
-                        <option>Wohnung (WE)</option>
-                        <option>Mehrfamilienhaus (MFH)</option>
-                    </select>
-                </div>
-                <div class="col-span-1">
-                    <label class="block text-sm font-medium mb-1">Kaufpreis (€)</label>
-                    <input type="number" id="kaufpreis" class="w-full p-2 rounded-full border border-gray-300" placeholder="0">
-                </div>
+                <div><label class="block text-xs font-semibold text-gray-600 mb-1">Objekttyp</label><select id="objekttyp" class="w-full p-3 rounded-full border border-gray-300"><option>Wohnung (WE)</option><option>Mehrfamilienhaus (MFH)</option></select></div>
+                <div><label class="block text-xs font-semibold text-gray-600 mb-1">Kaufpreis (€)</label><input type="number" id="kaufpreis" class="w-full p-3 rounded-full border border-gray-300" placeholder="0"></div>
             </div>
-            
-            <div class="grid grid-cols-3 gap-4 mt-4">
-                <div>
-                    <label class="block text-sm font-medium mb-1">Baujahr</label>
-                    <input type="number" id="baujahr" class="w-full p-2 rounded-full border border-gray-300">
-                </div>
-                <div>
-                    <label class="block text-sm font-medium mb-1">Preisspiegel (€/m²)</label>
-                    <input type="number" id="preisspiegel" class="w-full p-2 rounded-full border border-gray-300">
-                </div>
-                <div>
-                    <label class="block text-sm font-medium mb-1">Mietspiegel (€/m²)</label>
-                    <input type="number" id="mietspiegel" class="w-full p-2 rounded-full border border-gray-300">
-                </div>
+            <div class="grid grid-cols-3 gap-4">
+                <div><label class="block text-xs font-semibold text-gray-600 mb-1">Baujahr</label><input type="number" id="baujahr" class="w-full p-3 rounded-full border border-gray-300"></div>
+                <div><label class="block text-xs font-semibold text-gray-600 mb-1">Preisspiegel (€/m²)</label><input type="number" id="preisspiegel" class="w-full p-3 rounded-full border border-gray-300"></div>
+                <div><label class="block text-xs font-semibold text-gray-600 mb-1">Mietspiegel (€/m²)</label><input type="number" id="mietspiegel" class="w-full p-3 rounded-full border border-gray-300"></div>
             </div>
-
-            <div class="grid grid-cols-3 gap-4 mt-4">
-                <div>
-                    <label class="block text-sm font-medium mb-1">Mietstatus</label>
-                    <select id="mietstatus" class="w-full p-2 rounded-full border border-gray-300">
-                        <option>vermietet</option>
-                        <option>Leerstand</option>
-                    </select>
-                </div>
-                <div>
-                    <label class="block text-sm font-medium mb-1">Wohnfläche (m²)</label>
-                    <input type="number" id="wohnflaeche" class="w-full p-2 rounded-full border border-gray-300">
-                </div>
-                <div>
-                    <label class="block text-sm font-medium mb-1">Jahreskaltmiete (€)</label>
-                    <input type="number" id="jahreskaltmiete" class="w-full p-2 rounded-full border border-gray-300">
-                </div>
+            <div class="grid grid-cols-3 gap-4">
+                <div><label class="block text-xs font-semibold text-gray-600 mb-1">Mietstatus</label><select id="mietstatus" class="w-full p-3 rounded-full border border-gray-300"><option>vermietet</option><option>Leerstand</option></select></div>
+                <div><label class="block text-xs font-semibold text-gray-600 mb-1">Wohnfläche (m²)</label><input type="number" id="wohnflaeche" class="w-full p-3 rounded-full border border-gray-300"></div>
+                <div><label class="block text-xs font-semibold text-gray-600 mb-1">Jahreskaltmiete (€)</label><input type="number" id="jahreskaltmiete" class="w-full p-3 rounded-full border border-gray-300"></div>
             </div>
-
-            <div class="grid grid-cols-2 gap-4 mt-4">
-                <div>
-                    <label class="block text-sm font-medium mb-1">Stellplätze (Stk.)</label>
-                    <input type="number" id="stellplaetze" class="w-full p-2 rounded-full border border-gray-300">
-                </div>
-                <div>
-                    <label class="block text-sm font-medium mb-1">Stellplatzmiete (€ mtl.)</label>
-                    <input type="number" id="stellplatzmiete" class="w-full p-2 rounded-full border border-gray-300">
-                </div>
+            <div class="grid grid-cols-2 gap-4">
+                <div><label class="block text-xs font-semibold text-gray-600 mb-1">Stellplätze & Garagen (Stk.)</label><input type="number" id="stellplaetze" class="w-full p-3 rounded-full border border-gray-300"></div>
+                <div><label class="block text-xs font-semibold text-gray-600 mb-1">Stellplatzmiete (€ mtl.)</label><input type="number" id="stellplatzmiete" class="w-full p-3 rounded-full border border-gray-300"></div>
             </div>
         </div>
 
         <div id="view-finanzierung" class="hidden">
-            <p class="text-center text-gray-500 py-10">Hier folgen die Felder für den Reiter Finanzierung.</p>
+            <p class="text-center text-gray-500 py-10">Bereich Finanzierung in Entwicklung.</p>
         </div>
     </main>
 
-    <!-- Ergebnisfeld -->
-    <footer class="fixed-footer bg-white shadow-t border-t border-gray-200 p-4">
-        <div id="result-objekt" class="grid grid-cols-2 gap-4 text-center">
-            <div class="bg-blue-50 p-3 rounded-lg">
-                <p class="text-xs text-gray-600">Kaufpreis pro m²</p>
-                <p id="res-kpm2" class="text-lg font-bold text-blue-700">0 €/m²</p>
-            </div>
-            <div class="bg-blue-50 p-3 rounded-lg">
-                <p class="text-xs text-gray-600">Jahreskaltmiete gesamt</p>
-                <p id="res-mietegesamt" class="text-lg font-bold text-blue-700">0 €</p>
-            </div>
+    <footer class="fixed-footer">
+        <div id="result-objekt" class="grid grid-cols-2 gap-2 text-center">
+            <div class="bg-blue-50 p-2 rounded-lg"><p class="text-[9px] text-gray-500 uppercase">Kaufpreis pro m²</p><p id="res-kpm2" class="font-bold text-blue-700 text-sm">0 €/m²</p></div>
+            <div class="bg-blue-50 p-2 rounded-lg"><p class="text-[9px] text-gray-500 uppercase">Preisspiegelabweichung</p><p id="res-preisabw" class="font-bold text-blue-700 text-sm">0%</p></div>
+            <div class="bg-blue-50 p-2 rounded-lg"><p class="text-[9px] text-gray-500 uppercase">Jahreskaltmiete gesamt</p><p id="res-mietegesamt" class="font-bold text-blue-700 text-sm">0 €</p></div>
+            <div class="bg-blue-50 p-2 rounded-lg"><p class="text-[9px] text-gray-500 uppercase">Mietspiegelabweichung</p><p id="res-mieteabw" class="font-bold text-blue-700 text-sm">0%</p></div>
+            <div class="bg-blue-50 p-2 rounded-lg"><p class="text-[9px] text-gray-500 uppercase">Bruttomietrendite</p><p id="res-rendite" class="font-bold text-blue-700 text-sm">0%</p></div>
+            <div class="bg-blue-50 p-2 rounded-lg"><p class="text-[9px] text-gray-500 uppercase">Bruttomietrendite (inkl. Stellp.)</p><p id="res-rendite-st" class="font-bold text-blue-700 text-sm">0%</p></div>
         </div>
     </footer>
 
     <script>
-        // Logik für Reiter-Wechsel
-        const btnObjekt = document.getElementById('btn-objekt');
-        const btnFin = document.getElementById('btn-finanzierung');
-        const viewObjekt = document.getElementById('view-objekt');
-        const viewFin = document.getElementById('view-finanzierung');
-        const resObjekt = document.getElementById('result-objekt');
-
-        btnObjekt.addEventListener('click', () => {
-            viewObjekt.classList.remove('hidden');
-            viewFin.classList.add('hidden');
-            resObjekt.classList.remove('hidden');
-            btnObjekt.className = "flex-1 py-2 font-bold text-blue-600 border-b-2 border-blue-600";
-            btnFin.className = "flex-1 py-2 font-semibold text-gray-500";
-        });
-
-        btnFin.addEventListener('click', () => {
-            viewObjekt.classList.add('hidden');
-            viewFin.classList.remove('hidden');
-            resObjekt.classList.add('hidden');
-            btnFin.className = "flex-1 py-2 font-bold text-blue-600 border-b-2 border-blue-600";
-            btnObjekt.className = "flex-1 py-2 font-semibold text-gray-500";
-        });
-
-        // Berechnungslogik
-        const inputs = ['kaufpreis', 'wohnflaeche', 'jahreskaltmiete', 'stellplaetze', 'stellplatzmiete'];
-        inputs.forEach(id => {
-            document.getElementById(id).addEventListener('input', calculate);
-        });
-
+        const formatNum = (n) => n.toLocaleString('de-DE', {maximumFractionDigits: 0});
+        
         function calculate() {
-            const kaufpreis = parseFloat(document.getElementById('kaufpreis').value) || 0;
-            const wohnflaeche = parseFloat(document.getElementById('wohnflaeche').value) || 0;
-            const jahreskaltmiete = parseFloat(document.getElementById('jahreskaltmiete').value) || 0;
-            const stellplaetze = parseFloat(document.getElementById('stellplaetze').value) || 0;
-            const stellplatzmiete = parseFloat(document.getElementById('stellplatzmiete').value) || 0;
+            const kp = parseFloat(document.getElementById('kaufpreis').value) || 0;
+            const wf = parseFloat(document.getElementById('wohnflaeche').value) || 0;
+            const jkm = parseFloat(document.getElementById('jahreskaltmiete').value) || 0;
+            const stp = parseFloat(document.getElementById('stellplaetze').value) || 0;
+            const stm = parseFloat(document.getElementById('stellplatzmiete').value) || 0;
+            const ps = parseFloat(document.getElementById('preisspiegel').value) || 0;
+            const ms = parseFloat(document.getElementById('mietspiegel').value) || 0;
 
-            // Formeln
-            const kpm2 = wohnflaeche > 0 ? (kaufpreis / wohnflaeche) : 0;
-            const mietegesamt = jahreskaltmiete + (stellplaetze * stellplatzmiete * 12);
+            const kpm2 = wf > 0 ? (kp / wf) : 0;
+            const mietegesamt = jkm + (stp * stm * 12);
+            const preisabw = (kpm2 > 0 && ps > 0) ? ((kpm2 / ps) * 100) : 0;
+            const mieteabw = (wf > 0 && ms > 0) ? (((jkm / (12 * wf)) / ms) * 100) : 0;
+            const rendite = (kp > 0) ? (jkm / kp) * 100 : 0;
+            const renditeSt = (kp > 0) ? (mietegesamt / kp) * 100 : 0;
 
-            // Ausgabe mit Tausenderpunkten
-            document.getElementById('res-kpm2').innerText = kpm2.toLocaleString('de-DE', {maximumFractionDigits: 2}) + " €/m²";
-            document.getElementById('res-mietegesamt').innerText = mietegesamt.toLocaleString('de-DE') + " €";
+            document.getElementById('res-kpm2').innerText = formatNum(kpm2) + " €/m²";
+            document.getElementById('res-mietegesamt').innerText = formatNum(mietegesamt) + " €";
+            document.getElementById('res-preisabw').innerText = preisabw.toFixed(1) + "%";
+            document.getElementById('res-mieteabw').innerText = mieteabw.toFixed(1) + "%";
+            document.getElementById('res-rendite').innerText = rendite.toFixed(2) + "%";
+            document.getElementById('res-rendite-st').innerText = renditeSt.toFixed(2) + "%";
         }
+
+        // Toggle Logic
+        document.getElementById('btn-objekt').onclick = () => { toggle(true); };
+        document.getElementById('btn-finanzierung').onclick = () => { toggle(false); };
+
+        function toggle(isObjekt) {
+            document.getElementById('view-objekt').classList.toggle('hidden', !isObjekt);
+            document.getElementById('view-finanzierung').classList.toggle('hidden', isObjekt);
+            document.getElementById('result-objekt').classList.toggle('hidden', !isObjekt);
+            document.getElementById('btn-objekt').className = isObjekt ? "flex-1 py-3 font-bold text-blue-600 border-b-2 border-blue-600" : "flex-1 py-3 font-semibold text-gray-500";
+            document.getElementById('btn-finanzierung').className = !isObjekt ? "flex-1 py-3 font-bold text-blue-600 border-b-2 border-blue-600" : "flex-1 py-3 font-semibold text-gray-500";
+        }
+
+        document.querySelectorAll('input, select').forEach(el => el.addEventListener('input', calculate));
     </script>
 </body>
 </html>
