@@ -12,7 +12,6 @@
 </head>
 <body class="bg-gray-50 min-h-screen text-gray-900">
 
-    <!-- Kopfteil -->
     <header class="fixed top-0 w-full bg-white shadow-md z-50 p-4">
         <div class="flex rounded-lg bg-gray-200 p-1">
             <button id="btnObjekt" onclick="showTab('Objekt')" class="flex-1 py-2 rounded-md font-semibold bg-white shadow">Objekt</button>
@@ -20,15 +19,11 @@
         </div>
     </header>
 
-    <!-- Hauptteil -->
     <main id="mainContent" class="pt-[90px] px-4 pb-[250px] space-y-6">
-        <!-- Inhalte werden per JS geladen -->
     </main>
 
-    <!-- Ergebnisfeld -->
     <footer id="footerResult" class="fixed bottom-0 w-full bg-white border-t p-4 shadow-lg z-40">
         <div id="results" class="grid grid-cols-2 gap-4 text-sm">
-            <!-- Ergebnisse kommen hierhin -->
         </div>
     </footer>
 
@@ -50,7 +45,14 @@
         };
 
         function formatNumber(num) {
-            return num.toLocaleString('de-DE', { minimumFractionDigits: 0, maximumFractionDigits: 2 });
+            return num.toLocaleString('de-DE', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+        }
+
+        // Hilfsfunktion zur Formatierung bei Eingabe
+        function handleInput(key, value) {
+            const cleanValue = Number(value.replace(/\./g, ''));
+            state.Objekt[key] = cleanValue;
+            updateResults();
         }
 
         function updateResults() {
@@ -60,17 +62,29 @@
             const jahreskaltmiete = data.jahreskaltmiete || 0;
             const stellplatzMieteGesamt = data.stellplaetze * data.stellplatzmiete * 12;
             const jahreskaltmieteGesamt = jahreskaltmiete + stellplatzMieteGesamt;
-            const kaufpreisProM2 = kaufpreis / wohnflaeche;
+            const kaufpreisProM2 = wohnflaeche > 0 ? kaufpreis / wohnflaeche : 0;
             
             const results = `
                 <div><label class="block text-gray-500">Kaufpreis pro m²</label><b>${formatNumber(kaufpreisProM2)} €/m²</b></div>
-                <div><label class="block text-gray-500">Preisspiegelabweichung</label><b>${formatNumber((kaufpreisProM2/data.preisspiegel)*100)} %</b></div>
+                <div><label class="block text-gray-500">Preisspiegelabweichung</label><b>${data.preisspiegel > 0 ? formatNumber((kaufpreisProM2/data.preisspiegel)*100) : 0} %</b></div>
                 <div><label class="block text-gray-500">Jahreskaltmiete gesamt</label><b>${formatNumber(jahreskaltmieteGesamt)} €</b></div>
-                <div><label class="block text-gray-500">Mietspiegelabweichung</label><b>${formatNumber((jahreskaltmiete/(12*wohnflaeche))/data.mietspiegel*100)} %</b></div>
-                <div><label class="block text-gray-500">Bruttomietrendite</label><b>${formatNumber((jahreskaltmiete/kaufpreis)*100)} %</b></div>
-                <div><label class="block text-gray-500">Bruttomietrendite (inkl. Stellp.)</label><b>${formatNumber((jahreskaltmieteGesamt/kaufpreis)*100)} %</b></div>
+                <div><label class="block text-gray-500">Mietspiegelabweichung</label><b>${(data.mietspiegel > 0 && wohnflaeche > 0) ? formatNumber(((jahreskaltmiete/(12*wohnflaeche))/data.mietspiegel)*100) : 0} %</b></div>
+                <div><label class="block text-gray-500">Bruttomietrendite</label><b>${kaufpreis > 0 ? formatNumber((jahreskaltmiete/kaufpreis)*100) : 0} %</b></div>
+                <div><label class="block text-gray-500">Bruttomietrendite (inkl. Stellp.)</label><b>${kaufpreis > 0 ? formatNumber((jahreskaltmieteGesamt/kaufpreis)*100) : 0} %</b></div>
             `;
             document.getElementById('results').innerHTML = results;
+        }
+
+        function createInput(label, key, unit) {
+            return `
+                <div class="flex-1">
+                    <label class="block text-xs font-medium text-gray-700 mb-1">${label}</label>
+                    <div class="relative">
+                        <input type="text" class="w-full p-2 border rounded-lg pr-12" value="${state.Objekt[key].toLocaleString('de-DE')}" oninput="this.value = this.value.replace(/[^0-9]/g, ''); handleInput('${key}', this.value)">
+                        <span class="absolute right-3 top-2 text-gray-400 text-sm pointer-events-none">${unit}</span>
+                    </div>
+                </div>
+            `;
         }
 
         function showTab(tab) {
@@ -79,30 +93,30 @@
             document.getElementById('btnFinanzierung').className = tab === 'Finanzierung' ? 'flex-1 py-2 rounded-md font-semibold bg-white shadow' : 'flex-1 py-2 rounded-md font-semibold';
             
             if(tab === 'Objekt') renderObjekt();
-            else document.getElementById('mainContent').innerHTML = '<p class="text-center">Finanzierung Maske in Entwicklung...</p>';
+            else document.getElementById('mainContent').innerHTML = '<p class="text-center mt-10">Finanzierung Maske in Entwicklung...</p>';
             updateResults();
         }
 
         function renderObjekt() {
             const container = document.getElementById('mainContent');
             container.innerHTML = `
-                <div class="grid grid-cols-2 gap-4">
-                    <div><label>Objekttyp</label><select class="w-full p-2 border rounded-lg" onchange="state.Objekt.objekttyp=this.value"><option>Wohnung(WE)</option><option>Mehrfamilienhaus (MFH)</option></select></div>
-                    <div><label>Kaufpreis (€)</label><input type="number" class="w-full p-2 border rounded-lg" value="${state.Objekt.kaufpreis}" oninput="state.Objekt.kaufpreis=Number(this.value); updateResults()"></div>
+                <div class="flex gap-4">
+                    <div class="flex-1"><label class="block text-xs font-medium text-gray-700 mb-1">Objekttyp</label><select class="w-full p-2 border rounded-lg" onchange="state.Objekt.objekttyp=this.value"><option>Wohnung(WE)</option><option>Mehrfamilienhaus (MFH)</option></select></div>
+                    ${createInput("Kaufpreis", "kaufpreis", "€")}
                 </div>
-                <div class="grid grid-cols-3 gap-2">
-                    <div><label>Baujahr</label><input type="number" class="w-full p-2 border rounded-lg" value="${state.Objekt.baujahr}" oninput="state.Objekt.baujahr=Number(this.value)"></div>
-                    <div><label>Preisspiegel (€/m²)</label><input type="number" class="w-full p-2 border rounded-lg" value="${state.Objekt.preisspiegel}" oninput="state.Objekt.preisspiegel=Number(this.value); updateResults()"></div>
-                    <div><label>Mietspiegel (€/m²)</label><input type="number" class="w-full p-2 border rounded-lg" value="${state.Objekt.mietspiegel}" oninput="state.Objekt.mietspiegel=Number(this.value); updateResults()"></div>
+                <div class="flex gap-2">
+                    ${createInput("Baujahr", "baujahr", "")}
+                    ${createInput("Preisspiegel", "preisspiegel", "€/m²")}
+                    ${createInput("Mietspiegel", "mietspiegel", "€/m²")}
                 </div>
-                <div class="grid grid-cols-3 gap-2">
-                    <div><label>Mietstatus</label><select class="w-full p-2 border rounded-lg" onchange="state.Objekt.mietstatus=this.value"><option>vermietet</option><option>Leerstand</option></select></div>
-                    <div><label>Wohnfläche (m²)</label><input type="number" class="w-full p-2 border rounded-lg" value="${state.Objekt.wohnflaeche}" oninput="state.Objekt.wohnflaeche=Number(this.value); updateResults()"></div>
-                    <div><label>Jahreskaltmiete (€)</label><input type="number" class="w-full p-2 border rounded-lg" value="${state.Objekt.jahreskaltmiete}" oninput="state.Objekt.jahreskaltmiete=Number(this.value); updateResults()"></div>
+                <div class="flex gap-2">
+                    <div class="flex-1"><label class="block text-xs font-medium text-gray-700 mb-1">Mietstatus</label><select class="w-full p-2 border rounded-lg" onchange="state.Objekt.mietstatus=this.value"><option>vermietet</option><option>Leerstand</option></select></div>
+                    ${createInput("Wohnfläche", "wohnflaeche", "m²")}
+                    ${createInput("Jahreskaltmiete", "jahreskaltmiete", "€")}
                 </div>
-                <div class="grid grid-cols-2 gap-4">
-                    <div><label>Stellplätze (Stk.)</label><input type="number" class="w-full p-2 border rounded-lg" value="${state.Objekt.stellplaetze}" oninput="state.Objekt.stellplaetze=Number(this.value); updateResults()"></div>
-                    <div><label>Stellplatzmiete (€ mtl.)</label><input type="number" class="w-full p-2 border rounded-lg" value="${state.Objekt.stellplatzmiete}" oninput="state.Objekt.stellplatzmiete=Number(this.value); updateResults()"></div>
+                <div class="flex gap-4">
+                    ${createInput("Stellplätze & Garagen", "stellplaetze", "Stk.")}
+                    ${createInput("Stellplatzmiete", "stellplatzmiete", "€ mtl.")}
                 </div>
             `;
         }
