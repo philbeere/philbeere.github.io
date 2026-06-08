@@ -3,125 +3,139 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Immobilien-Kalkulator</title>
+    <title>Immobilien Kalkulationstool</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        .input-group { position: relative; }
-        .unit-label { position: absolute; right: 10px; top: 38px; color: #6b7280; font-size: 0.875rem; pointer-events: none; }
-        .tab-content { display: none; }
-        .tab-content.active { display: block; }
+        .tab-button.active { border-bottom: 2px solid #3b82f6; color: #3b82f6; font-weight: bold; }
+        .row-border { border-bottom: 1px solid #e5e7eb; padding-bottom: 1rem; margin-bottom: 1rem; }
+        input[type="range"] { accent-color: #3b82f6; }
     </style>
 </head>
-<body class="bg-gray-100 font-sans">
+<body class="bg-gray-100">
 
-    <header class="fixed top-0 w-full bg-white shadow-md z-50 p-4">
-        <div class="flex gap-2 overflow-x-auto pb-1" id="tab-buttons">
-            <button onclick="showTab('Objekt')" class="tab-btn px-4 py-2 bg-blue-600 text-white rounded-lg whitespace-nowrap">Objekt</button>
-            <button onclick="showTab('Anschaffungskosten')" class="tab-btn px-4 py-2 bg-gray-200 rounded-lg whitespace-nowrap">Anschaffungskosten</button>
-            <button onclick="showTab('Finanzierung')" class="tab-btn px-4 py-2 bg-gray-200 rounded-lg whitespace-nowrap">Finanzierung</button>
-            <button onclick="showTab('Rendite')" class="tab-btn px-4 py-2 bg-gray-200 rounded-lg whitespace-nowrap">Rendite</button>
-        </div>
+    <header class="fixed top-0 w-full bg-white shadow-md z-50">
+        <nav id="tabs" class="flex overflow-x-auto p-2 gap-2 text-sm whitespace-nowrap"></nav>
     </header>
 
-    <main class="pt-[90px] px-4 pb-[250px] space-y-6">
-        <!-- REITER: OBJEKT -->
-        <div id="tab-Objekt" class="tab-content active">
-            <div class="grid grid-cols-2 gap-4">
-                <div><label class="block text-sm">Objekttyp</label><select id="objekttyp" onchange="calc()" class="w-full p-3 rounded-xl border"><option value="WE">Wohnung (WE)</option><option value="MFH">Mehrfamilienhaus (MFH)</option></select></div>
-                <div class="input-group"><label class="block text-sm">Kaufpreis</label><input type="text" id="kaufpreis" oninput="formatAndCalc(this)" class="w-full p-3 rounded-xl border"><span class="unit-label">€</span></div>
-            </div>
-            <div class="grid grid-cols-3 gap-2 mt-4">
-                <div><label class="block text-sm">Baujahr</label><input type="text" id="baujahr" class="w-full p-3 rounded-xl border"></div>
-                <div class="input-group"><label class="block text-sm">Preisspiegel</label><input type="text" id="preisspiegel" oninput="formatAndCalc(this)" class="w-full p-3 rounded-xl border"><span class="unit-label">€/m²</span></div>
-                <div class="input-group"><label class="block text-sm">Mietspiegel</label><input type="text" id="mietspiegel" oninput="formatAndCalc(this)" class="w-full p-3 rounded-xl border"><span class="unit-label">€/m²</span></div>
-            </div>
-            <div class="grid grid-cols-3 gap-2 mt-4">
-                <div><label class="block text-sm">Mietstatus</label><select id="mietstatus" onchange="calc()" class="w-full p-3 rounded-xl border"><option>vermietet</option><option>Leerstand</option></select></div>
-                <div class="input-group"><label class="block text-sm">Wohnfläche</label><input type="text" id="wohnflaeche" oninput="formatAndCalc(this)" class="w-full p-3 rounded-xl border"><span class="unit-label">m²</span></div>
-                <div class="input-group"><label class="block text-sm">Jahreskaltmiete</label><input type="text" id="jahreskaltmiete" oninput="formatAndCalc(this)" class="w-full p-3 rounded-xl border"><span class="unit-label">€</span></div>
-            </div>
-            <div class="grid grid-cols-2 gap-4 mt-4">
-                <div class="input-group"><label class="block text-sm">Stellplätze & Garagen</label><input type="text" id="stellplaetze" oninput="formatAndCalc(this)" class="w-full p-3 rounded-xl border"><span class="unit-label">Stk.</span></div>
-                <div class="input-group"><label class="block text-sm">Stellplatzmiete</label><input type="text" id="stellplatzmiete" oninput="formatAndCalc(this)" class="w-full p-3 rounded-xl border"><span class="unit-label">€ mtl.</span></div>
-            </div>
-        </div>
+    <main id="main-content" class="pt-[90px] px-4 pb-[250px] space-y-6"></main>
 
-        <!-- REITER: ANSCHAFFUNGSKOSTEN -->
-        <div id="tab-Anschaffungskosten" class="tab-content">
-            <h2 class="text-lg font-bold mb-4">Grunderwerbssteuer</h2>
-            <input type="range" id="steuer-range" min="3.5" max="6.5" step="0.5" value="3.5" class="w-full" oninput="updateRange('steuer', this.value)">
-            <p class="text-center font-bold" id="steuer-val">3,5 %</p>
-            
-            <h2 class="text-lg font-bold mt-6 mb-4">Notar & Grundbuch</h2>
-            <input type="range" id="notar-range" min="0" max="7.14" step="0.01" value="3.57" class="w-full" oninput="updateRange('notar', this.value)">
-            <div class="flex justify-between text-xs text-gray-500">
-                <span onclick="updateRange('notar', 0)" class="cursor-pointer font-bold">0%</span>
-                <span onclick="updateRange('notar', 3.57)" class="cursor-pointer font-bold">3,57%</span>
-                <span onclick="updateRange('notar', 7.14)" class="cursor-pointer font-bold">7,14%</span>
-            </div>
-            <p class="text-center font-bold" id="notar-val">3,57 %</p>
-        </div>
-
-        <div id="tab-Finanzierung" class="tab-content"><h2 class="text-xl font-bold">Finanzierung</h2></div>
-        <div id="tab-Rendite" class="tab-content"><h2 class="text-xl font-bold">Rendite</h2></div>
-    </main>
-
-    <footer class="fixed bottom-0 w-full bg-blue-900 text-white p-4 z-50 text-xs">
-        <div class="grid grid-cols-2 gap-2" id="res-grid">
-            <!-- Dynamisch durch JS -->
-        </div>
+    <footer class="fixed bottom-0 w-full bg-gray-900 text-white p-4 h-[250px] overflow-y-auto shadow-inner border-t-2 border-blue-500">
+        <h3 class="font-bold border-b border-gray-700 mb-3">Ergebnisse</h3>
+        <div id="results-content" class="grid grid-cols-2 gap-4 text-xs"></div>
     </footer>
 
     <script>
-        function updateRange(id, val) {
-            // Konvertierung in String, um replace() sicher anwenden zu können
-            let stringVal = String(val);
-            document.getElementById(id + '-val').innerText = stringVal.replace('.', ',') + ' %';
-            document.getElementById(id + '-range').value = val;
+        const state = {
+            activeTab: 'Objekt',
+            data: {
+                Objekttyp: 'Wohnung (WE)', Mietstatus: 'vermietet', Kaufpreis: 0, Jahreskaltmiete: 0,
+                Baujahr: 2000, Gebäudeanteil: 0, Preisspiegel: 0, Mietspiegel: 0,
+                Wohnfläche: 0, Nutzfläche: 0, Stellplätze: 0, Stellplatzmiete: 0,
+                Verhandlungspotential: 10, Grunderwerbssteuer: 6.5, Maklercourtage: 3.57,
+                Notar: 2, Finanzierungsnebenkosten: 0.5
+            }
+        };
+
+        function fmt(num) { return (num || 0).toLocaleString('de-DE', {minimumFractionDigits: 2, maximumFractionDigits: 2}); }
+        function toClean(val) { return parseFloat(val.toString().replace(/\./g, '').replace(',', '.')) || 0; }
+        function toFormat(val) { return (val || 0).toLocaleString('de-DE', {maximumFractionDigits: 2}); }
+
+        function formatAndCalc(el) {
+            if(el.type !== 'range' && el.tagName !== 'SELECT') {
+                const rawVal = toClean(el.value);
+                state.data[el.name] = rawVal;
+                el.value = toFormat(rawVal);
+            } else {
+                state.data[el.name] = parseFloat(el.value) || el.value;
+                if(el.type === 'range') document.getElementById('val-' + el.name).innerText = el.value + ' %';
+            }
+            renderResults();
         }
 
-        function formatAndCalc(input) {
-            let val = input.value.replace(/\./g, '').replace(',', '.');
-            if (!isNaN(val) && val !== '') input.value = new Intl.NumberFormat('de-DE').format(val);
-            calc();
+        function renderResults() {
+            const res = document.getElementById('results-content');
+            res.innerHTML = '';
+            
+            if (state.activeTab === 'Objekt') {
+                const kpm2 = state.data.Kaufpreis / (state.data.Wohnfläche || 1);
+                const psAbw = ((kpm2 / (state.data.Preisspiegel || 1)) - 1) * 100;
+                const jkmGes = state.data.Jahreskaltmiete + (state.data.Stellplätze * state.data.Stellplatzmiete * 12);
+                const msAbw = (((state.data.Jahreskaltmiete / (12 * (state.data.Wohnfläche || 1))) / (state.data.Mietspiegel || 1)) - 1) * 100;
+                
+                res.innerHTML = `
+                    <div>Kaufpreis pro m²:<br><strong>${fmt(kpm2)} €/m²</strong></div>
+                    <div>Preisspiegelabweichung:<br><strong>${fmt(psAbw)} %</strong></div>
+                    <div>Jahreskaltmiete gesamt:<br><strong>${jkmGes.toLocaleString('de-DE')} €</strong></div>
+                    <div>Mietspiegelabweichung:<br><strong>${fmt(msAbw)} %</strong></div>
+                    <div>Bruttomietrendite:<br><strong>${fmt((state.data.Jahreskaltmiete / (state.data.Kaufpreis || 1) * 100))} %</strong></div>
+                    <div>BMR (inkl. Stellp.):<br><strong>${fmt((jkmGes / (state.data.Kaufpreis || 1) * 100))} %</strong></div>
+                `;
+            } else if (state.activeTab === 'Anschaffungskosten') {
+                const kpv = state.data.Kaufpreis * (1 - (state.data.Verhandlungspotential / 100));
+                const kknPct = state.data.Grunderwerbssteuer + state.data.Maklercourtage + state.data.Notar + state.data.Finanzierungsnebenkosten;
+                const kkn = (kknPct / 100) * kpv;
+                res.innerHTML = `
+                    <div>Kaufpreis:<br><strong>${state.data.Kaufpreis.toLocaleString('de-DE')} €</strong></div>
+                    <div>Kaufpreis inkl. Verh.:<br><strong>${kpv.toLocaleString('de-DE')} €</strong></div>
+                    <div>Gesamtsatz KKN:<br><strong>${fmt(kknPct)} %</strong></div>
+                    <div>Kaufnebenkosten:<br><strong>${kkn.toLocaleString('de-DE')} €</strong></div>
+                    <div>Anschaffungskosten:<br><strong>${(kpv + kkn).toLocaleString('de-DE')} €</strong></div>
+                `;
+            }
         }
 
-        function calc() {
-            const getV = (id) => parseFloat(document.getElementById(id).value.replace(/\./g, '').replace(',', '.')) || 0;
-            const kp = getV('kaufpreis'), wf = getV('wohnflaeche'), ps = getV('preisspiegel'), ms = getV('mietspiegel'), 
-                  jkm = getV('jahreskaltmiete'), stp = getV('stellplaetze'), stm = getV('stellplatzmiete');
-
-            const kpm2 = wf > 0 ? (kp / wf) : 0;
-            const psAbw = ps > 0 ? ((kpm2 / ps) - 1) * 100 : 0;
-            const jkmGes = jkm + (stp * stm * 12);
-            const msAbw = (ms * 12 * wf) > 0 ? ((jkm / (12 * wf)) / ms - 1) * 100 : 0;
-            const bmr = kp > 0 ? (jkm / kp) * 100 : 0;
-            const bmrStp = kp > 0 ? (jkmGes / kp) * 100 : 0;
-
-            document.getElementById('res-grid').innerHTML = `
-                <div>Kaufpreis/m²: <strong>${kpm2.toLocaleString('de-DE', {maximumFractionDigits:0})} €</strong></div>
-                <div>Preisspiegel-Abw.: <strong>${psAbw.toFixed(1)} %</strong></div>
-                <div>Jahreskaltmiete ges.: <strong>${jkmGes.toLocaleString('de-DE')} €</strong></div>
-                <div>Mietspiegel-Abw.: <strong>${msAbw.toFixed(1)} %</strong></div>
-                <div>Bruttomietrendite: <strong>${bmr.toFixed(2)} %</strong></div>
-                <div>Rendite (inkl. Stellp.): <strong>${bmrStp.toFixed(2)} %</strong></div>
-            `;
+        function createInput(name, unit, type = "number", options = null) {
+            if(options) {
+                return `<div class="flex-1"><label class="text-xs font-bold block mb-1">${name}</label>
+                    <select name="${name}" oninput="formatAndCalc(this)" class="w-full border rounded-lg p-2">${options.map(o => `<option ${state.data[name]===o?'selected':''}>${o}</option>`).join('')}</select></div>`;
+            }
+            // Fix für Fehler: Überprüfung ob state.data[name] definiert ist
+            const val = (type === 'number') ? toFormat(state.data[name] || 0) : (state.data[name] || '');
+            return `<div class="flex-1"><label class="text-xs font-bold block mb-1">${name}</label>
+                <div class="relative"><input type="text" name="${name}" value="${val}" oninput="formatAndCalc(this)" class="w-full border rounded-lg p-2 pr-16">
+                <span class="absolute right-3 top-2 text-gray-400 text-sm">${unit}</span></div></div>`;
         }
 
-        function showTab(t) {
-            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
-            document.querySelectorAll('.tab-btn').forEach(btn => {
-                btn.classList.remove('bg-blue-600', 'text-white');
-                btn.classList.add('bg-gray-200');
-                if(btn.innerText === t) {
-                    btn.classList.add('bg-blue-600', 'text-white');
-                    btn.classList.remove('bg-gray-200');
-                }
-            });
-            const target = document.getElementById('tab-' + t);
-            if(target) target.classList.add('active');
+        function switchTab(tab) {
+            state.activeTab = tab;
+            document.querySelectorAll('.tab-button').forEach(b => b.classList.toggle('active', b.innerText === tab));
+            const main = document.getElementById('main-content');
+            main.innerHTML = '';
+            
+            if (tab === 'Objekt') {
+                main.innerHTML = `
+                    <div class="grid grid-cols-2 gap-4 row-border">${createInput('Objekttyp', '', 'text', ['Wohnung (WE)', 'Mehrfamilienhaus (MFH)'])}${createInput('Mietstatus', '', 'text', ['vermietet', 'Leerstand'])}</div>
+                    <div class="grid grid-cols-2 gap-4 row-border">${createInput('Kaufpreis', '€', 'number')}${createInput('Jahreskaltmiete', '€', 'number')}</div>
+                    <div class="grid grid-cols-2 gap-4 row-border">${createInput('Baujahr', '', 'number')}${createInput('Gebäudeanteil', '%', 'number')}</div>
+                    <div class="grid grid-cols-2 gap-4 row-border">${createInput('Preisspiegel', '€/m²', 'number')}${createInput('Mietspiegel', '€/m²', 'number')}</div>
+                    <div class="grid grid-cols-2 gap-4 row-border">${createInput('Wohnfläche', 'm²', 'number')}${createInput('Nutzfläche', 'm²', 'number')}</div>
+                    <div class="grid grid-cols-2 gap-4 row-border">${createInput('Stellplätze & Garagen', 'Stk.', 'number')}${createInput('Stellplatzmiete', '€ mtl.', 'number')}</div>
+                `;
+            } else if (tab === 'Anschaffungskosten') {
+                const sliders = [
+                    {name: 'Verhandlungspotential', min: 0, max: 20, step: 1},
+                    {name: 'Grunderwerbssteuer', min: 3.5, max: 6.5, step: 0.5},
+                    {name: 'Maklercourtage', min: 0, max: 7.14, step: 0.01},
+                    {name: 'Notar und Grundbucheintrag', min: 0, max: 2.5, step: 0.1},
+                    {name: 'Finanzierungsnebenkosten', min: 0, max: 1, step: 0.1}
+                ];
+                sliders.forEach(s => {
+                    main.innerHTML += `<div class="row-border"><label class="text-xs font-bold">${s.name}</label>
+                        <input type="range" name="${s.name}" min="${s.min}" max="${s.max}" step="${s.step}" value="${state.data[s.name]}" class="w-full" oninput="formatAndCalc(this)">
+                        <span class="text-sm text-blue-600 font-bold" id="val-${s.name}">${state.data[s.name]} %</span></div>`;
+                });
+            }
+            renderResults();
         }
-        calc();
+
+        ['Objekt', 'Anschaffungskosten', 'Bewirtschaftungskosten', 'Finanzierung', 'Rendite'].forEach(t => {
+            const btn = document.createElement('button');
+            btn.className = 'tab-button px-3 py-2';
+            btn.innerText = t;
+            btn.onclick = () => switchTab(t);
+            document.getElementById('tabs').appendChild(btn);
+        });
+        switchTab('Objekt');
     </script>
 </body>
 </html>
