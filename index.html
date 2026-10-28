@@ -2,140 +2,536 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>Immobilien Kalkulationstool</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <meta name="description" content="Kalkulationstool für Immobilien und Kapitalanlagen">
+    <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
+    <meta name="theme-color" content="#15252b" media="(prefers-color-scheme: dark)">
+    <link rel="manifest" href="manifest.webmanifest">
+    <link rel="icon" href="icon.svg" type="image/svg+xml">
+    <link rel="apple-touch-icon" href="icon-192.png">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="Immo-Kalk">
     <style>
-        .tab-button.active { border-bottom: 2px solid #3b82f6; color: #3b82f6; font-weight: bold; }
-        .row-border { border-bottom: 1px solid #e5e7eb; padding-bottom: 1rem; margin-bottom: 1rem; }
-        input[type="range"] { accent-color: #3b82f6; }
+        :root {
+            --bg: #e9eef0;
+            --sheet: #ffffff;
+            --field: #f6f8f9;
+            --ink: #16303a;
+            --muted: #566a73;
+            --line: #dbe3e6;
+            --line-strong: #c3cfd4;
+            --accent: #0e6b6b;
+            --accent-ink: #ffffff;
+            --accent-soft: #dcebea;
+            --panel: #10333a;
+            --panel-ink: #e6f0ef;
+            --panel-muted: #9fbcbd;
+            --panel-line: rgba(230, 240, 239, 0.14);
+            --hi: #f3c95b;
+            --good: #8fdcb4;
+            --warn: #f5b26b;
+            --radius-field: 12px;
+            --radius-sheet: 18px;
+            --font: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+        }
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --bg: #0d1a1f;
+                --sheet: #15252b;
+                --field: #1b2e35;
+                --ink: #e3ecee;
+                --muted: #9aaeb5;
+                --line: #24383f;
+                --line-strong: #345059;
+                --accent: #4fb8b2;
+                --accent-ink: #062223;
+                --accent-soft: #1d3d3f;
+                --panel: #071d22;
+                --panel-ink: #e6f0ef;
+                --panel-muted: #92b0b2;
+            }
+        }
+
+        * { box-sizing: border-box; }
+        html { -webkit-text-size-adjust: 100%; }
+        body {
+            margin: 0;
+            background: var(--bg);
+            color: var(--ink);
+            font-family: var(--font);
+            font-size: 16px;
+            line-height: 1.4;
+            -webkit-tap-highlight-color: transparent;
+        }
+        button, input, select { font: inherit; color: inherit; }
+        :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+        /* Klassen aus der Anwendungsbeschreibung (<main class="pt-[90px] px-4 pb-[250px] space-y-6">) */
+        .pt-\[90px\] { padding-top: calc(90px + env(safe-area-inset-top, 0px)); }
+        .px-4 { padding-left: 16px; padding-right: 16px; }
+        .pb-\[250px\] { padding-bottom: calc(250px + 24px + env(safe-area-inset-bottom, 0px)); }
+        .space-y-6 > * + * { margin-top: 24px; }
+
+        /* ---------- Kopfteil ---------- */
+        .app-header {
+            position: fixed; top: 0; left: 0; right: 0; z-index: 50;
+            background: var(--sheet);
+            border-bottom: 1px solid var(--line);
+            padding-top: env(safe-area-inset-top, 0px);
+        }
+        .tabs {
+            display: flex; gap: 6px;
+            max-width: 680px; margin: 0 auto;
+            padding: 12px 16px;
+            overflow-x: auto; scrollbar-width: none;
+            scroll-snap-type: x proximity;
+        }
+        .tabs::-webkit-scrollbar { display: none; }
+        .tab-button {
+            flex: 0 0 auto;
+            border: 0; background: transparent;
+            padding: 11px 16px;
+            border-radius: 999px;
+            font-size: 15px; font-weight: 600;
+            color: var(--muted);
+            white-space: nowrap; cursor: pointer;
+            scroll-snap-align: start;
+            transition: background-color .15s, color .15s;
+        }
+        @media (hover: hover) { .tab-button:not(.active):hover { background: var(--accent-soft); color: var(--ink); } }
+        .tab-button.active { background: var(--accent); color: var(--accent-ink); }
+
+        /* ---------- Hauptteil ---------- */
+        .sheet {
+            max-width: 680px; margin-left: auto; margin-right: auto;
+            background: var(--sheet);
+            border-radius: var(--radius-sheet);
+            padding: 0 16px;
+        }
+        .row {
+            display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 12px;
+            padding: 18px 0;
+            border-bottom: 1px solid var(--line);
+        }
+        .row { align-items: end; }
+        .row:last-child { border-bottom: 0; }
+        .row.single { grid-template-columns: 1fr; }
+
+        .field label, .slider-head label {
+            display: block;
+            font-size: 13px; font-weight: 600;
+            color: var(--muted);
+            margin-bottom: 6px;
+            hyphens: auto; -webkit-hyphens: auto; overflow-wrap: anywhere;
+        }
+        .control { position: relative; }
+        .control input, .control select {
+            width: 100%; height: 50px;
+            border: 1px solid var(--line-strong);
+            border-radius: var(--radius-field);
+            background: var(--field);
+            padding: 0 14px;
+            font-size: 17px; /* >= 16px verhindert Auto-Zoom auf iOS */
+            font-variant-numeric: tabular-nums;
+        }
+        .control input { text-align: right; padding-right: 50px; }
+        .control input:focus, .control select:focus {
+            outline: none; border-color: var(--accent);
+            box-shadow: 0 0 0 3px var(--accent-soft);
+            background: var(--sheet);
+        }
+        .control select {
+            appearance: none; -webkit-appearance: none;
+            padding: 0 28px 0 12px; font-size: 16px;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1.5l5 5 5-5' fill='none' stroke='%23566a73' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+            background-repeat: no-repeat; background-position: right 10px center;
+        }
+        .unit {
+            position: absolute; right: 14px; top: 50%; transform: translateY(-50%);
+            font-size: 14px; color: var(--muted);
+            pointer-events: none; white-space: nowrap;
+        }
+
+        /* Schieberegler */
+        .slider-head { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; }
+        .slider-head label { margin: 0; }
+        .slider-value {
+            font-size: 24px; font-weight: 750; letter-spacing: -0.01em;
+            color: var(--accent); font-variant-numeric: tabular-nums;
+        }
+        input[type="range"] {
+            width: 100%; height: 36px; margin: 6px 0 0;
+            accent-color: var(--accent); cursor: pointer;
+        }
+        .scale { display: flex; justify-content: space-between; font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; }
+        .presets { display: flex; justify-content: space-between; margin-top: 4px; }
+        .preset {
+            border: 1px solid var(--line-strong); background: var(--field);
+            border-radius: 999px; padding: 7px 14px;
+            font-size: 14px; font-weight: 600; font-variant-numeric: tabular-nums;
+            cursor: pointer;
+        }
+        .preset[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+
+        .empty-state { padding: 28px 0; color: var(--muted); font-size: 15px; }
+
+        /* ---------- Ergebnisfeld ---------- */
+        .results {
+            position: fixed; left: 0; right: 0; bottom: 0; z-index: 40;
+            height: calc(250px + env(safe-area-inset-bottom, 0px));
+            padding: 14px 16px calc(14px + env(safe-area-inset-bottom, 0px));
+            background: var(--panel); color: var(--panel-ink);
+            border-radius: 20px 20px 0 0;
+            overflow-y: auto;
+            box-shadow: 0 -6px 24px rgba(8, 28, 33, 0.18);
+        }
+        .results-inner { max-width: 680px; margin: 0 auto; }
+        .results h2 {
+            margin: 0 0 10px; font-size: 13px; font-weight: 600; color: var(--panel-muted);
+        }
+        .results h2 strong { color: var(--panel-ink); font-weight: 650; }
+        .results-grid { display: grid; grid-template-columns: 1fr 1fr; column-gap: 16px; }
+        .res { padding: 8px 0; border-top: 1px solid var(--panel-line); min-width: 0; }
+        .res .k { font-size: 12px; color: var(--panel-muted); }
+        .res .v {
+            font-size: 19px; font-weight: 700; font-variant-numeric: tabular-nums;
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+        }
+        .res .v small { font-size: 13px; font-weight: 500; color: var(--panel-muted); margin-left: 3px; }
+        .res.mid { grid-column: 1 / -1; text-align: center; }
+        .res.mid .v { font-size: 28px; color: var(--hi); }
+        .res .v.good { color: var(--good); }
+        .res .v.warn { color: var(--warn); }
+
+        @media (min-width: 720px) {
+            .results { border-radius: 20px 20px 0 0; }
+        }
+        @media (prefers-reduced-motion: reduce) {
+            * { transition: none !important; }
+        }
     </style>
 </head>
-<body class="bg-gray-100">
+<body>
 
-    <header class="fixed top-0 w-full bg-white shadow-md z-50">
-        <nav id="tabs" class="flex overflow-x-auto p-2 gap-2 text-sm whitespace-nowrap"></nav>
+    <header class="app-header">
+        <nav id="tabs" class="tabs" role="tablist" aria-label="Bereiche"></nav>
     </header>
 
     <main id="main-content" class="pt-[90px] px-4 pb-[250px] space-y-6"></main>
 
-    <footer class="fixed bottom-0 w-full bg-gray-900 text-white p-4 h-[250px] overflow-y-auto shadow-inner border-t-2 border-blue-500">
-        <h3 class="font-bold border-b border-gray-700 mb-3">Ergebnisse</h3>
-        <div id="results-content" class="grid grid-cols-2 gap-4 text-xs"></div>
+    <footer class="results" aria-live="polite">
+        <div class="results-inner">
+            <h2 id="results-title">Ergebnisse</h2>
+            <div id="results-content" class="results-grid"></div>
+        </div>
     </footer>
 
     <script>
-        const state = {
-            activeTab: 'Objekt',
-            data: {
-                Objekttyp: 'Wohnung (WE)', Mietstatus: 'vermietet', Kaufpreis: 0, Jahreskaltmiete: 0,
-                Baujahr: 2000, Gebäudeanteil: 0, Preisspiegel: 0, Mietspiegel: 0,
-                Wohnfläche: 0, Nutzfläche: 0, Stellplätze: 0, Stellplatzmiete: 0,
-                Verhandlungspotential: 10, Grunderwerbssteuer: 6.5, Maklercourtage: 3.57,
-                Notar: 2, Finanzierungsnebenkosten: 0.5
-            }
+    /* =========================================================
+       Konfiguration: Eingabefelder je Reiter (laut Anwendungsbeschreibung)
+       Jedes Feld hat einen festen Schlüssel (key) – Anzeigename und
+       Berechnung nutzen denselben Schlüssel, damit nichts auseinanderläuft.
+       ========================================================= */
+    const TABS = ['Objekt', 'Anschaffungskosten', 'Bewirtschaftungskosten', 'Finanzierung', 'Rendite'];
+
+    const DEFAULTS = {
+        objekttyp: 'Wohnung (WE)', mietstatus: 'vermietet',
+        kaufpreis: 0, jahreskaltmiete: 0,
+        baujahr: '', gebaeudeanteil: 0,
+        preisspiegel: 0, mietspiegel: 0,
+        wohnflaeche: 0, nutzflaeche: 0,
+        stellplaetze: 0, stellplatzmiete: 0,
+        verhandlung: 10, grest: 6.5, makler: 3.57, notar: 1.5, finnk: 0.5,
+        mietausfall: 2, instandhaltung: 10, hausverwaltung: 0, sev: 0
+    };
+
+    const FORMS = {
+        Objekt: [
+            [{ key: 'objekttyp', label: 'Objekttyp', type: 'select', options: ['Wohnung (WE)', 'Mehrfamilienhaus (MFH)'] },
+             { key: 'mietstatus', label: 'Mietstatus', type: 'select', options: ['vermietet', 'Leerstand'] }],
+            [{ key: 'kaufpreis', label: 'Kaufpreis', unit: '€' },
+             { key: 'jahreskaltmiete', label: 'Jahreskaltmiete', unit: '€' }],
+            [{ key: 'baujahr', label: 'Baujahr', type: 'year' },
+             { key: 'gebaeudeanteil', label: 'Gebäudeanteil', unit: '%' }],
+            [{ key: 'preisspiegel', label: 'Preisspiegel', unit: '€/m²' },
+             { key: 'mietspiegel', label: 'Mietspiegel', unit: '€/m²' }],
+            [{ key: 'wohnflaeche', label: 'Wohnfläche', unit: 'm²' },
+             { key: 'nutzflaeche', label: 'Nutzfläche', unit: 'm²' }],
+            [{ key: 'stellplaetze', label: 'Stellplätze & Garagen', unit: 'Stk.' },
+             { key: 'stellplatzmiete', label: 'Stellplatzmiete', unit: '€ mtl.' }]
+        ],
+        Anschaffungskosten: [
+            [{ key: 'verhandlung', label: 'Verhandlungspotential', type: 'range', min: 0, max: 20, step: 1 }],
+            [{ key: 'grest', label: 'Grunderwerbssteuer', type: 'range', min: 3.5, max: 6.5, step: 0.5 }],
+            [{ key: 'makler', label: 'Maklercourtage', type: 'range', min: 0, max: 7.14, step: 0.01, presets: [0, 3.57, 7.14] }],
+            [{ key: 'notar', label: 'Notar und Grundbucheintrag', type: 'range', min: 0, max: 2.5, step: 0.1 }],
+            [{ key: 'finnk', label: 'Finanzierungsnebenkosten', type: 'range', min: 0, max: 1, step: 0.1 }]
+        ],
+        Bewirtschaftungskosten: [
+            [{ key: 'mietausfall', label: 'Mietausfallwagnis', unit: '%' },
+             { key: 'instandhaltung', label: 'Instandhaltungsrücklage', unit: '€/m²/J' }],
+            [{ key: 'hausverwaltung', label: 'Hausverwaltung', unit: '€ mtl.' },
+             { key: 'sev', label: 'Sondereigentumsverwaltung', unit: '€ mtl.' }]
+        ]
+    };
+
+    /* ---------- Zustand (wird lokal gespeichert) ---------- */
+    const STORE_KEY = 'immo-kalk-v1';
+    const state = { activeTab: 'Objekt', data: { ...DEFAULTS } };
+    try {
+        const saved = JSON.parse(localStorage.getItem(STORE_KEY) || 'null');
+        if (saved && saved.data) Object.assign(state.data, saved.data);
+        if (saved && TABS.includes(saved.activeTab)) state.activeTab = saved.activeTab;
+    } catch (e) { /* Speicher nicht verfügbar – mit Standardwerten weiter */ }
+    function save() {
+        try { localStorage.setItem(STORE_KEY, JSON.stringify(state)); } catch (e) {}
+    }
+
+    /* ---------- Zahlen: deutsches Format ---------- */
+    function parseDe(str) {
+        const n = parseFloat(String(str).replace(/\./g, '').replace(',', '.'));
+        return Number.isFinite(n) ? n : 0;
+    }
+    function num(value, digits = 2) {
+        return value.toLocaleString('de-DE', { minimumFractionDigits: digits, maximumFractionDigits: digits });
+    }
+    function toInputText(value) {
+        return value ? value.toLocaleString('de-DE', { maximumFractionDigits: 2 }) : '';
+    }
+    // Division, die bei 0 oder fehlenden Werten "kein Ergebnis" liefert statt Unsinn
+    function div(a, b) { return (b && Number.isFinite(a / b)) ? a / b : null; }
+
+    /* ---------- Eingabe: formatieren + rechnen ----------
+       - Tausendertrennzeichen werden live gesetzt, ein angefangenes Komma bleibt erhalten
+       - ein getippter Punkt wird als Komma behandelt (Android-Zahlentastatur)
+       - die Cursorposition bleibt beim Formatieren erhalten
+       - Schieberegler und Auswahlmenüs laufen über dieselbe Funktion */
+    function formatAndCalc(el, ev) {
+        const key = el.dataset.key;
+        if (el.type === 'range') {
+            state.data[key] = Number(el.value);
+            updateSlider(key);
+        } else if (el.tagName === 'SELECT') {
+            state.data[key] = el.value;
+        } else {
+            let v = el.value;
+            let caret = el.selectionStart ?? v.length;
+            if (ev && ev.data === '.') v = v.slice(0, caret - 1) + ',' + v.slice(caret);
+            const sigBefore = v.slice(0, caret).replace(/[^\d,]/g, '').length;
+
+            let clean = v.replace(/[^\d,]/g, '');
+            const ci = clean.indexOf(',');
+            if (ci >= 0) clean = clean.slice(0, ci + 1) + clean.slice(ci + 1).replace(/,/g, '').slice(0, 2);
+            let [intPart, decPart] = clean.split(',');
+            intPart = intPart.replace(/^0+(?=\d)/, '');
+            if (intPart === '' && decPart !== undefined) intPart = '0';
+            const out = intPart.replace(/\B(?=(\d{3})+(?!\d))/g, '.') + (decPart !== undefined ? ',' + decPart : '');
+
+            el.value = out;
+            let pos = 0, seen = 0;
+            while (pos < out.length && seen < sigBefore) { if (/[\d,]/.test(out[pos])) seen++; pos++; }
+            try { el.setSelectionRange(pos, pos); } catch (e) {}
+            state.data[key] = parseDe(out);
+        }
+        save();
+        renderResults();
+    }
+
+    // Baujahr: bewusst ohne formatAndCalc (keine Tausenderpunkte)
+    function setYear(el) {
+        el.value = el.value.replace(/\D/g, '').slice(0, 4);
+        state.data.baujahr = el.value;
+        save();
+    }
+
+    function setPreset(key, value) {
+        state.data[key] = value;
+        const el = document.querySelector(`input[data-key="${key}"]`);
+        if (el) el.value = value;
+        updateSlider(key);
+        save();
+        renderResults();
+    }
+
+    function updateSlider(key) {
+        const out = document.getElementById('val-' + key);
+        const f = findField(key);
+        if (out) out.textContent = state.data[key].toLocaleString('de-DE', { minimumFractionDigits: decimalsOf(f.step), maximumFractionDigits: decimalsOf(f.step) }) + ' %';
+        document.querySelectorAll(`.preset[data-key="${key}"]`).forEach(b =>
+            b.setAttribute('aria-pressed', String(Number(b.dataset.value) === state.data[key])));
+    }
+    function decimalsOf(step) { return (String(step).split('.')[1] || '').length; }
+    function findField(key) {
+        for (const rows of Object.values(FORMS)) for (const row of rows) for (const f of row) if (f.key === key) return f;
+    }
+
+    /* ---------- Bausteine der Eingabemaske ---------- */
+    function fieldHtml(f) {
+        const id = 'f-' + f.key;
+        if (f.type === 'select') {
+            return `<div class="field"><label for="${id}">${f.label}</label>
+                <div class="control"><select id="${id}" data-key="${f.key}" oninput="formatAndCalc(this, event)">
+                ${f.options.map(o => `<option${state.data[f.key] === o ? ' selected' : ''}>${o}</option>`).join('')}
+                </select></div></div>`;
+        }
+        if (f.type === 'year') {
+            return `<div class="field"><label for="${id}">${f.label}</label>
+                <div class="control"><input id="${id}" type="text" inputmode="numeric" maxlength="4" style="padding-right:14px" autocomplete="off"
+                    placeholder="z. B. 1995" value="${state.data[f.key] || ''}" oninput="setYear(this)"></div></div>`;
+        }
+        if (f.type === 'range') {
+            const d = decimalsOf(f.step);
+            const fmt = v => v.toLocaleString('de-DE', { minimumFractionDigits: d, maximumFractionDigits: d }) + ' %';
+            const below = f.presets
+                ? `<div class="presets">${f.presets.map(p =>
+                    `<button type="button" class="preset" data-key="${f.key}" data-value="${p}" aria-pressed="${p === state.data[f.key]}"
+                     onclick="setPreset('${f.key}', ${p})">${p.toLocaleString('de-DE')} %</button>`).join('')}</div>`
+                : `<div class="scale"><span>${fmt(f.min)}</span><span>${fmt(f.max)}</span></div>`;
+            return `<div class="slider">
+                <div class="slider-head"><label for="${id}">${f.label}</label>
+                    <output class="slider-value" id="val-${f.key}" for="${id}">${fmt(state.data[f.key])}</output></div>
+                <input id="${id}" type="range" data-key="${f.key}" min="${f.min}" max="${f.max}" step="${f.step}"
+                    value="${state.data[f.key]}" oninput="formatAndCalc(this, event)">
+                ${below}</div>`;
+        }
+        return `<div class="field"><label for="${id}">${f.label}</label>
+            <div class="control">
+                <input id="${id}" type="text" inputmode="decimal" autocomplete="off" data-key="${f.key}"
+                    value="${toInputText(state.data[f.key])}" placeholder="0" oninput="formatAndCalc(this, event)">
+                <span class="unit">${f.unit}</span></div></div>`;
+    }
+
+    /* ---------- Ergebnisse je Reiter ---------- */
+    function calc() {
+        const d = state.data;
+        const kpm2 = div(d.kaufpreis, d.wohnflaeche);
+        const mpm2 = div(d.jahreskaltmiete, 12 * d.wohnflaeche);
+        const jkmGes = d.jahreskaltmiete + d.stellplaetze * d.stellplatzmiete * 12;
+        const bmr = div(d.jahreskaltmiete, d.kaufpreis);
+        const bmrGes = div(jkmGes, d.kaufpreis);
+
+        const kpv = d.kaufpreis * (1 - d.verhandlung / 100);
+        const knkPct = d.grest + d.makler + d.notar + d.finnk;
+        const knk = knkPct / 100 * kpv;
+        const ak = kpv + knk;
+
+        const ihrPa = d.instandhaltung * d.wohnflaeche;
+        const maPa = d.mietausfall / 100 * d.jahreskaltmiete;
+        const hvPa = d.hausverwaltung * 12;
+        const sevPa = d.sev * 12;
+        const nuk = ihrPa + maPa + hvPa + sevPa;  // Annahme, siehe Anwendungsbeschreibung
+        const nmr = div(d.jahreskaltmiete - nuk, ak);
+
+        return {
+            kpm2, mpm2, jkmGes, bmr, bmrGes,
+            psAbw: kpm2 !== null && d.preisspiegel ? (kpm2 / d.preisspiegel - 1) : null,
+            msAbw: mpm2 !== null && d.mietspiegel ? (mpm2 / d.mietspiegel - 1) : null,
+            verv: div(1, bmr), vervGes: div(1, bmrGes),
+            kpv, knkPct, knk, ak,
+            ihrPa, ihrM: ihrPa / 12, maPa, hvPa, sevPa, nuk, nmr
         };
+    }
 
-        function fmt(num) { return (num || 0).toLocaleString('de-DE', {minimumFractionDigits: 2, maximumFractionDigits: 2}); }
-        function toClean(val) { return parseFloat(val.toString().replace(/\./g, '').replace(',', '.')) || 0; }
-        function toFormat(val) { return (val || 0).toLocaleString('de-DE', {maximumFractionDigits: 2}); }
-
-        function formatAndCalc(el) {
-            if(el.type !== 'range' && el.tagName !== 'SELECT') {
-                const rawVal = toClean(el.value);
-                state.data[el.name] = rawVal;
-                el.value = toFormat(rawVal);
-            } else {
-                state.data[el.name] = parseFloat(el.value) || el.value;
-                if(el.type === 'range') document.getElementById('val-' + el.name).innerText = el.value + ' %';
-            }
-            renderResults();
+    // Zellen: [Name, Wert, Art] | null (leere Position) ; Art: eur, eur2, m2, pct (Anteil 0..1), pctRaw (schon in %), dev, factor
+    function results(tab, r) {
+        const d = state.data;
+        switch (tab) {
+            case 'Objekt': return [
+                [['Kaufpreis/m²', r.kpm2, 'm2'], ['Mietpreis/m²', r.mpm2, 'm2']],
+                [['Preisspiegelabweichung', r.psAbw, 'dev'], ['Mietspiegelabweichung', r.msAbw, 'devRent']],
+                [null, ['Jahreskaltmiete gesamt', r.jkmGes, 'eur']],
+                [['BMR', r.bmr, 'pct'], ['Vervielfältiger', r.verv, 'factor']],
+                [['BMR gesamt', r.bmrGes, 'pct'], ['Vervielfältiger gesamt', r.vervGes, 'factor']]
+            ];
+            case 'Anschaffungskosten': return [
+                [['Kaufpreis', d.kaufpreis, 'eur'], ['Kaufpreis inkl. Verh.', r.kpv, 'eur']],
+                [['Anteil KNK', r.knkPct, 'pctRaw'], ['Kaufnebenkosten', r.knk, 'eur']],
+                [['Anschaffungskosten', r.ak, 'eur', 'mid']]
+            ];
+            case 'Bewirtschaftungskosten': return [
+                [['Instandhaltungsrücklage p.a.', r.ihrPa, 'eur'], ['Instandhaltungsrücklage mtl.', r.ihrM, 'eur2']],
+                [['Mietausfallrücklage p.a.', r.maPa, 'eur'], ['Hausverwaltung p.a.', r.hvPa, 'eur']],
+                [['Sondereigentumsverwaltung p.a.', r.sevPa, 'eur'], null],
+                [['Nicht umlagefähige Kosten p.a.', r.nuk, 'eur'], ['NMR', r.nmr, 'pct']]
+            ];
+            default: return [];
         }
+    }
 
-        function renderResults() {
-            const res = document.getElementById('results-content');
-            res.innerHTML = '';
-            
-            if (state.activeTab === 'Objekt') {
-                const kpm2 = state.data.Kaufpreis / (state.data.Wohnfläche || 1);
-                const psAbw = ((kpm2 / (state.data.Preisspiegel || 1)) - 1) * 100;
-                const jkmGes = state.data.Jahreskaltmiete + (state.data.Stellplätze * state.data.Stellplatzmiete * 12);
-                const msAbw = (((state.data.Jahreskaltmiete / (12 * (state.data.Wohnfläche || 1))) / (state.data.Mietspiegel || 1)) - 1) * 100;
-                
-                res.innerHTML = `
-                    <div>Kaufpreis pro m²:<br><strong>${fmt(kpm2)} €/m²</strong></div>
-                    <div>Preisspiegelabweichung:<br><strong>${fmt(psAbw)} %</strong></div>
-                    <div>Jahreskaltmiete gesamt:<br><strong>${jkmGes.toLocaleString('de-DE')} €</strong></div>
-                    <div>Mietspiegelabweichung:<br><strong>${fmt(msAbw)} %</strong></div>
-                    <div>Bruttomietrendite:<br><strong>${fmt((state.data.Jahreskaltmiete / (state.data.Kaufpreis || 1) * 100))} %</strong></div>
-                    <div>BMR (inkl. Stellp.):<br><strong>${fmt((jkmGes / (state.data.Kaufpreis || 1) * 100))} %</strong></div>
-                `;
-            } else if (state.activeTab === 'Anschaffungskosten') {
-                const kpv = state.data.Kaufpreis * (1 - (state.data.Verhandlungspotential / 100));
-                const kknPct = state.data.Grunderwerbssteuer + state.data.Maklercourtage + state.data.Notar + state.data.Finanzierungsnebenkosten;
-                const kkn = (kknPct / 100) * kpv;
-                res.innerHTML = `
-                    <div>Kaufpreis:<br><strong>${state.data.Kaufpreis.toLocaleString('de-DE')} €</strong></div>
-                    <div>Kaufpreis inkl. Verh.:<br><strong>${kpv.toLocaleString('de-DE')} €</strong></div>
-                    <div>Gesamtsatz KKN:<br><strong>${fmt(kknPct)} %</strong></div>
-                    <div>Kaufnebenkosten:<br><strong>${kkn.toLocaleString('de-DE')} €</strong></div>
-                    <div>Anschaffungskosten:<br><strong>${(kpv + kkn).toLocaleString('de-DE')} €</strong></div>
-                `;
-            }
+    function valueHtml(v, kind) {
+        if (v === null || v === undefined || !Number.isFinite(v)) return '–';
+        switch (kind) {
+            case 'eur': return `${num(v, 0)}<small>€</small>`;
+            case 'eur2': return `${num(v, 2)}<small>€</small>`;
+            case 'm2': return `${num(v, 2)}<small>€/m²</small>`;
+            case 'pct': return `${num(v * 100, 2)}<small>%</small>`;
+            case 'pctRaw': return `${num(v, 2)}<small>%</small>`;
+            case 'dev': case 'devRent': return `${v > 0 ? '+' : v < 0 ? '−' : ''}${num(Math.abs(v) * 100, 2)}<small>%</small>`;
+            case 'factor': return num(v, 2);
         }
+    }
+    function valueClass(v, kind) {
+        if (v === null || !Number.isFinite(v) || v === 0) return '';
+        // Kaufpreis unter Preisspiegel = günstig; Miete unter Mietspiegel = Mietsteigerungspotenzial
+        if (kind === 'dev') return v < 0 ? 'good' : 'warn';
+        if (kind === 'devRent') return v < 0 ? 'good' : 'warn';
+        return '';
+    }
 
-        function createInput(name, unit, type = "number", options = null) {
-            if(options) {
-                return `<div class="flex-1"><label class="text-xs font-bold block mb-1">${name}</label>
-                    <select name="${name}" oninput="formatAndCalc(this)" class="w-full border rounded-lg p-2">${options.map(o => `<option ${state.data[name]===o?'selected':''}>${o}</option>`).join('')}</select></div>`;
-            }
-            // Fix für Fehler: Überprüfung ob state.data[name] definiert ist
-            const val = (type === 'number') ? toFormat(state.data[name] || 0) : (state.data[name] || '');
-            return `<div class="flex-1"><label class="text-xs font-bold block mb-1">${name}</label>
-                <div class="relative"><input type="text" name="${name}" value="${val}" oninput="formatAndCalc(this)" class="w-full border rounded-lg p-2 pr-16">
-                <span class="absolute right-3 top-2 text-gray-400 text-sm">${unit}</span></div></div>`;
-        }
+    function renderResults() {
+        document.getElementById('results-title').innerHTML = `Ergebnisse · <strong>${state.activeTab}</strong>`;
+        const rows = results(state.activeTab, calc());
+        document.getElementById('results-content').innerHTML = rows.flat().map(c => {
+            if (!c) return '<div class="res" aria-hidden="true"></div>';
+            const [k, v, kind, pos] = c;
+            return `<div class="res${pos === 'mid' ? ' mid' : ''}"><div class="k">${k}</div>
+                <div class="v ${valueClass(v, kind)}">${valueHtml(v, kind)}</div></div>`;
+        }).join('');
+    }
 
-        function switchTab(tab) {
-            state.activeTab = tab;
-            document.querySelectorAll('.tab-button').forEach(b => b.classList.toggle('active', b.innerText === tab));
-            const main = document.getElementById('main-content');
-            main.innerHTML = '';
-            
-            if (tab === 'Objekt') {
-                main.innerHTML = `
-                    <div class="grid grid-cols-2 gap-4 row-border">${createInput('Objekttyp', '', 'text', ['Wohnung (WE)', 'Mehrfamilienhaus (MFH)'])}${createInput('Mietstatus', '', 'text', ['vermietet', 'Leerstand'])}</div>
-                    <div class="grid grid-cols-2 gap-4 row-border">${createInput('Kaufpreis', '€', 'number')}${createInput('Jahreskaltmiete', '€', 'number')}</div>
-                    <div class="grid grid-cols-2 gap-4 row-border">${createInput('Baujahr', '', 'number')}${createInput('Gebäudeanteil', '%', 'number')}</div>
-                    <div class="grid grid-cols-2 gap-4 row-border">${createInput('Preisspiegel', '€/m²', 'number')}${createInput('Mietspiegel', '€/m²', 'number')}</div>
-                    <div class="grid grid-cols-2 gap-4 row-border">${createInput('Wohnfläche', 'm²', 'number')}${createInput('Nutzfläche', 'm²', 'number')}</div>
-                    <div class="grid grid-cols-2 gap-4 row-border">${createInput('Stellplätze & Garagen', 'Stk.', 'number')}${createInput('Stellplatzmiete', '€ mtl.', 'number')}</div>
-                `;
-            } else if (tab === 'Anschaffungskosten') {
-                const sliders = [
-                    {name: 'Verhandlungspotential', min: 0, max: 20, step: 1},
-                    {name: 'Grunderwerbssteuer', min: 3.5, max: 6.5, step: 0.5},
-                    {name: 'Maklercourtage', min: 0, max: 7.14, step: 0.01},
-                    {name: 'Notar und Grundbucheintrag', min: 0, max: 2.5, step: 0.1},
-                    {name: 'Finanzierungsnebenkosten', min: 0, max: 1, step: 0.1}
-                ];
-                sliders.forEach(s => {
-                    main.innerHTML += `<div class="row-border"><label class="text-xs font-bold">${s.name}</label>
-                        <input type="range" name="${s.name}" min="${s.min}" max="${s.max}" step="${s.step}" value="${state.data[s.name]}" class="w-full" oninput="formatAndCalc(this)">
-                        <span class="text-sm text-blue-600 font-bold" id="val-${s.name}">${state.data[s.name]} %</span></div>`;
-                });
-            }
-            renderResults();
-        }
-
-        ['Objekt', 'Anschaffungskosten', 'Bewirtschaftungskosten', 'Finanzierung', 'Rendite'].forEach(t => {
-            const btn = document.createElement('button');
-            btn.className = 'tab-button px-3 py-2';
-            btn.innerText = t;
-            btn.onclick = () => switchTab(t);
-            document.getElementById('tabs').appendChild(btn);
+    /* ---------- Reiter ---------- */
+    function switchTab(tab) {
+        state.activeTab = tab;
+        save();
+        document.querySelectorAll('.tab-button').forEach(b => {
+            const on = b.dataset.tab === tab;
+            b.classList.toggle('active', on);
+            b.setAttribute('aria-selected', String(on));
+            if (on) b.scrollIntoView({ inline: 'nearest', block: 'nearest' });
         });
-        switchTab('Objekt');
+        const rows = FORMS[tab];
+        const main = document.getElementById('main-content');
+        main.innerHTML = rows
+            ? `<section class="sheet">${rows.map(r =>
+                `<div class="row${r.length === 1 ? ' single' : ''}">${r.map(fieldHtml).join('')}</div>`).join('')}</section>`
+            : `<section class="sheet"><p class="empty-state">Für „${tab}“ sind noch keine Eingabefelder festgelegt.</p></section>`;
+        // Einheit rechts im Feld: Zahl endet immer im gleichen Abstand vor der Einheit
+        main.querySelectorAll('.control .unit').forEach(u => {
+            u.previousElementSibling.style.paddingRight = (u.offsetWidth + 22) + 'px';
+        });
+        window.scrollTo(0, 0);
+        renderResults();
+    }
+
+    TABS.forEach(t => {
+        const btn = document.createElement('button');
+        btn.className = 'tab-button';
+        btn.type = 'button';
+        btn.role = 'tab';
+        btn.dataset.tab = t;
+        btn.textContent = t;
+        btn.onclick = () => switchTab(t);
+        document.getElementById('tabs').appendChild(btn);
+    });
+    switchTab(state.activeTab);
+
+    /* ---------- PWA: Offline-Unterstützung ---------- */
+    if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
+        window.addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
+    }
     </script>
 </body>
 </html>
